@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>กันลืม - โพสต์อิทเตือนความจำ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-top">
+        <div class="header-title-group">
+          <span class="app-logo">📌</span>
+          <div>
+            <h1 class="app-title">กันลืม</h1>
+            <p class="header-subtitle" id="todayText">กำลังโหลดวันที่...</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button id="backupBtn" class="icon-btn-secondary" title="สำรอง / กู้คืนข้อมูล" aria-label="สำรองข้อมูล">
+            💾
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Filter Tabs -->
+      <nav class="filter-tabs" aria-label="ตัวกรองรายการ">
+        <button class="filter-chip active" data-filter="all">
+          ทั้งหมด <span class="badge" id="countAll">0</span>
+        </button>
+        <button class="filter-chip chip-today" data-filter="today">
+          🔥 วันนี้ <span class="badge" id="countToday">0</span>
+        </button>
+        <button class="filter-chip chip-upcoming" data-filter="upcoming">
+          📅 เร็วๆ นี้ <span class="badge" id="countUpcoming">0</span>
+        </button>
+        <button class="filter-chip chip-done" data-filter="done">
+          ✅ เสร็จแล้ว <span class="badge" id="countDone">0</span>
+        </button>
+      </nav>
+
+      <!-- Search & Sort bar -->
+      <div class="search-bar-container">
+        <div class="search-input-wrapper">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" placeholder="ค้นหารายการ..." aria-label="ค้นหารายการ">
+          <button id="clearSearchBtn" class="clear-search-btn" style="display:none;">✕</button>
+        </div>
+        <select id="sortSelect" class="sort-select" aria-label="เรียงลำดับ">
+          <option value="dueAsc">⏳ วันที่ต้องทำ (ใกล้สุด)</option>
+          <option value="dueDesc">📅 วันที่ต้องทำ (ไกลสุด)</option>
+          <option value="createdDesc">✨ สร้างล่าสุด</option>
+        </select>
+      </div>
+    </header>
+
+    <!-- Main Content: Post-it Grid -->
+    <main class="notes-main">
+      <div id="notesGrid" class="notes-grid" role="list">
+        <!-- Post-it cards will be injected here via JavaScript -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="empty-state" style="display: none;">
+        <div class="empty-icon">📝</div>
+        <h2>ยังไม่มีรายการ</h2>
+        <p>กดปุ่ม <strong>+ แปะโน้ตใหม่</strong> ด้านล่าง<br>เพื่อเริ่มพิมพ์ พูด หรือถ่ายรูปกันลืมได้เลย!</p>
+      </div>
+    </main>
+
+    <!-- Floating Action Button for Mobile -->
+    <div class="fab-container">
+      <button id="addNoteFab" class="fab-btn" aria-label="เพิ่มโน้ตใหม่">
+        <span class="fab-icon">+</span>
+        <span class="fab-label">แปะโน้ตใหม่</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal: Create / Edit Note -->
+  <div id="noteModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <h2 id="modalTitle">📝 แปะกระดาษโน้ตใหม่</h2>
+        <button id="closeModalBtn" class="close-btn" aria-label="ปิด">✕</button>
+      </div>
+
+      <form id="noteForm" class="modal-form" onsubmit="return false;">
+        <input type="hidden" id="noteId">
+
+        <!-- Color Selector -->
+        <div class="form-group">
+          <label class="form-label">เลือกสีกระดาษ:</label>
+          <div class="color-palette" id="colorPalette">
+            <button type="button" class="color-swatch active" data-color="yellow" style="--c: #fff382;" title="สีเหลือง"></button>
+            <button type="button" class="color-swatch" data-color="blue" style="--c: #bae6fd;" title="สีฟ้า"></button>
+            <button type="button" class="color-swatch" data-color="green" style="--c: #bbf7d0;" title="สีเขียว"></button>
+            <button type="button" class="color-swatch" data-color="pink" style="--c: #fbcfe8;" title="สีชมพู"></button>
+            <button type="button" class="color-swatch" data-color="orange" style="--c: #fed7aa;" title="สีส้ม"></button>
+            <button type="button" class="color-swatch" data-color="purple" style="--c: #e9d5ff;" title="สีม่วง"></button>
+          </div>
+        </div>
+
+        <!-- Title Input with Voice -->
+        <div class="form-group">
+          <label for="noteTitle" class="form-label">เรื่องที่ต้องทำ / หัวข้อ (สำคัญ):</label>
+          <div class="input-with-action">
+            <input type="text" id="noteTitle" class="large-input" placeholder="เช่น ไปหาหมอ, ซื้อของเข้าบ้าน..." required>
+            <button type="button" class="action-btn voice-btn" id="voiceTitleBtn" title="พูดเพื่อพิมพ์หัวข้อ" aria-label="พูดข้อความ">
+              🎙️
+            </button>
+          </div>
+        </div>
+
+        <!-- Due Date & Time -->
+        <div class="form-group">
+          <label class="form-label">📅 กำหนดวันที่ต้องทำ:</label>
+          <div class="datetime-row">
+            <input type="date" id="noteDueDate" class="date-input" aria-label="วันที่ต้องทำ">
+            <input type="time" id="noteDueTime" class="time-input" aria-label="เวลา">
+          </div>
+          <!-- Quick date buttons -->
+          <div class="quick-date-buttons">
+            <button type="button" class="quick-date-btn" id="setTodayBtn">วันนี้</button>
+            <button type="button" class="quick-date-btn" id="setTomorrowBtn">พรุ่งนี้</button>
+            <button type="button" class="quick-date-btn" id="setNextWeekBtn">สัปดาห์หน้า</button>
+            <button type="button" class="quick-date-btn text-danger" id="clearDateBtn">ไม่ระบุวัน</button>
+          </div>
+        </div>
+
+        <!-- Details Textarea with Voice -->
+        <div class="form-group">
+          <label for="noteDetails" class="form-label">รายละเอียดเพิ่มเติม:</label>
+          <div class="input-with-action textarea-wrap">
+            <textarea id="noteDetails" rows="4" class="large-textarea" placeholder="พิมพ์รายละเอียด หรือกดปุ่มไมค์เพื่อพูดข้อความ..."></textarea>
+            <button type="button" class="action-btn voice-btn voice-detail-btn" id="voiceDetailsBtn" title="พูดเพื่อพิมพ์รายละเอียด" aria-label="พูดรายละเอียด">
+              🎙️
+            </button>
+          </div>
+        </div>
+
+        <!-- Photo Capture / Upload -->
+        <div class="form-group">
+          <label class="form-label">📸 แนบรูปถ่าย:</label>
+          <div class="photo-controls">
+            <input type="file" id="photoFileInput" accept="image/*" capture="environment" style="display:none;">
+            <button type="button" class="btn-attach" id="cameraBtn">
+              📷 ถ่ายรูป / เลือกรูป
+            </button>
+          </div>
+
+          <div id="imagePreviewContainer" class="image-preview-area" style="display:none;">
+            <img id="imagePreview" alt="รูปที่แนบ">
+            <button type="button" class="btn-remove-img" id="removePhotoBtn" title="ลบรูป">✕ ลบรูป</button>
+          </div>
+        </div>
+
+        <!-- Voice Memo Audio Clip -->
+        <div class="form-group">
+          <label class="form-label">🎙️ อัดคลิปเสียงกันลืม:</label>
+          <div class="voice-memo-controls">
+            <button type="button" id="recordAudioBtn" class="btn-record">
+              🔴 กดเพื่อเริ่มอัดเสียง
+            </button>
+            <span id="recordTimer" class="record-timer" style="display:none;">00:00</span>
+          </div>
+          
+          <div id="audioPreviewContainer" class="audio-preview-area" style="display:none;">
+            <audio id="audioPreview" controls></audio>
+            <button type="button" class="btn-remove-audio" id="removeAudioBtn" title="ลบเสียง">✕ ลบเสียง</button>
+          </div>
+        </div>
+
+        <!-- Speech recognition live status banner -->
+        <div id="speechBanner" class="speech-banner" style="display:none;">
+          <span class="pulsing-dot"></span>
+          <span id="speechStatusText">กำลังฟังเสียงพูดของคุณ... กรุณาพูดได้เลย</span>
+          <button type="button" id="stopVoiceBtn" class="stop-speech-btn">เสร็จสิ้น</button>
+        </div>
+
+        <!-- Form Action Buttons -->
+        <div class="modal-footer">
+          <button type="button" id="cancelModalBtn" class="btn-secondary">ยกเลิก</button>
+          <button type="submit" id="saveNoteBtn" class="btn-primary">💾 บันทึกกันลืม</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Image Viewer Modal (Full Screen preview) -->
+  <div id="imageModal" class="modal-overlay" style="display: none;" onclick="this.style.display='none'">
+    <div class="image-viewer-content">
+      <img id="fullImageViewer" alt="ดูรูปขนาดเต็ม">
+      <button class="image-close-btn" aria-label="ปิดรูปภาพ">✕</button>
+    </div>
+  </div>
+
+  <!-- Backup & Restore Modal -->
+  <div id="backupModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card small-modal">
+      <div class="modal-header">
+        <h2>💾 สำรอง / กู้คืนข้อมูล</h2>
+        <button id="closeBackupModalBtn" class="close-btn">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3">ข้อมูลโน้ตทั้งหมด (ข้อความ, รูปภาพ, คลิปเสียง) บันทึกอยู่ในเครื่องนี้อย่างปลอดภัย</p>
+        
+        <div class="backup-actions">
+          <button type="button" id="exportDataBtn" class="btn-primary w-full mb-3">
+            📥 ดาวน์โหลดไฟล์สำรองข้อมูล (Export)
+          </button>
+          
+          <hr class="divider">
+          
+          <label class="form-label mt-3">กู้คืนข้อมูลจากไฟล์สำรอง (Import):</label>
+          <input type="file" id="importFileInput" accept=".json" style="display:none;">
+          <button type="button" id="importDataBtn" class="btn-secondary w-full">
+            📤 เลือกไฟล์เพื่อกู้คืน (Restore)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast" style="display:none;"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
