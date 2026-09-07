@@ -121,6 +121,16 @@ const clearSearchBtn = document.getElementById('clearSearchBtn');
 const sortSelect = document.getElementById('sortSelect');
 const toastEl = document.getElementById('toast');
 
+// Alarm Elements & State
+const noteAlarm10Min = document.getElementById('noteAlarm10Min');
+const testAlarmSoundBtn = document.getElementById('testAlarmSoundBtn');
+const alarmModal = document.getElementById('alarmModal');
+const alarmTitleText = document.getElementById('alarmTitleText');
+const alarmTimeText = document.getElementById('alarmTimeText');
+const alarmDetailsText = document.getElementById('alarmDetailsText');
+const dismissAlarmBtn = document.getElementById('dismissAlarmBtn');
+let activeAlarmInterval = null;
+
 // Media DOM
 const cameraBtn = document.getElementById('cameraBtn');
 const photoFileInput = document.getElementById('photoFileInput');
@@ -284,6 +294,7 @@ async function initApp() {
     currentNotes = notes;
     renderNotes();
     setupSpeechRecognition();
+    setupAlarmChecker();
   } catch (err) {
     console.error('Failed to init app:', err);
     showToast('เกิดข้อผิดพลาดในการโหลดฐานข้อมูล');
@@ -380,8 +391,11 @@ function createNoteCardElement(note) {
   // Calculate Due Info
   const dateInfo = formatThaiDateDisplay(note.dueDate, note.dueTime);
   let badgeHtml = '';
+  const hasAlarm = note.dueDate && note.dueTime && note.alarm10Min !== false && !note.isDone;
+  const alarmChip = hasAlarm ? `<span class="card-alarm-chip" title="ตั้งเตือนก่อนเวลา 10 นาที">🔔 เตือน 10 น.</span>` : '';
+
   if (dateInfo) {
-    badgeHtml = `<div class="card-due-badge badge-${dateInfo.status}">📅 ${dateInfo.badgeLabel}</div>`;
+    badgeHtml = `<div class="card-due-badge badge-${dateInfo.status}">📅 ${dateInfo.badgeLabel} ${alarmChip}</div>`;
   } else {
     badgeHtml = `<div class="card-due-badge badge-nodate">⏰ ไม่ระบุวัน</div>`;
   }
@@ -481,6 +495,7 @@ function openCreateModal() {
   noteDetailsInput.value = '';
   noteDueDateInput.value = '';
   noteDueTimeInput.value = '';
+  noteAlarm10Min.checked = true;
   selectedColor = 'yellow';
   selectColorSwatch('yellow');
 
@@ -506,6 +521,7 @@ function openEditModal(note) {
   noteDetailsInput.value = note.details || '';
   noteDueDateInput.value = note.dueDate || '';
   noteDueTimeInput.value = note.dueTime || '';
+  noteAlarm10Min.checked = (note.alarm10Min !== false);
   selectedColor = note.color || 'yellow';
   selectColorSwatch(selectedColor);
 
@@ -549,18 +565,28 @@ async function handleSaveNote() {
   const id = noteIdInput.value || `note-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
   const existingNote = currentNotes.find((n) => n.id === id);
 
+  // If time was changed or it's a new note, reset notification flag
+  const timeChanged = !existingNote || existingNote.dueDate !== noteDueDateInput.value || existingNote.dueTime !== noteDueTimeInput.value;
+
   const noteData = {
     id: id,
     title: title,
     details: noteDetailsInput.value.trim(),
     dueDate: noteDueDateInput.value || null,
     dueTime: noteDueTimeInput.value || null,
+    alarm10Min: noteAlarm10Min.checked,
+    notified10Min: timeChanged ? false : (existingNote.notified10Min || false),
     color: selectedColor,
     photoUrl: currentAttachedPhoto,
     audioUrl: currentAttachedAudio,
     isDone: existingNote ? existingNote.isDone : false,
     createdAt: existingNote ? existingNote.createdAt : Date.now()
   };
+
+  // Gracefully request notification permission if alarm is enabled
+  if (noteAlarm10Min.checked && 'Notification' in window && Notification.permission === 'default') {
+    try { Notification.requestPermission(); } catch (e) {}
+  }
 
   try {
     await db.saveNote(noteData);
@@ -981,6 +1007,157 @@ function showToast(message) {
   toastTimeout = setTimeout(() => {
     toastEl.style.display = 'none';
   }, 2600);
+}
+
+// ==========================================
+// 16. Alarm System (10-minute prior chime & alert)
+// ==========================================
+function playChimeSound() {
+  try {
+    const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtxClass) return;
+    const ctx = new AudioCtxClass();
+    if (ctx.state === 'suspended') {
+      ctx.resume();
+    }
+
+    const playTone = (freq, startTime, duration, type = 'sine') => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(0.4, startTime + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    };
+
+    const now = ctx.currentTime;
+    // Pleasant 4-tone melodious chime (C5 -> E5 -> G5 -> C6)
+    playTone(523.25, now + 0.00, 0.45, 'triangle');
+    playTone(659.25, now + 0.20, 0.45, 'triangle');
+    playTone(783.99, now + 0.40, 0.45, 'triangle');
+    playTone(1046.50, now + 0.60, 0.90, 'sine');
+
+    // Repeated chime after 1.2s for clarity
+    playTone(523.25, now + 1.20, 0.45, 'triangle');
+    playTone(659.25, now + 1.40, 0.45, 'triangle');
+    playTone(783.99, now + 1.60, 0.45, 'triangle');
+    playTone(1046.50, now + 1.80, 1.20, 'sine');
+  } catch (e) {
+    console.warn('Web Audio error:', e);
+  }
+}
+
+function startAlarmRinging(note) {
+  stopAlarmRinging();
+  playChimeSound();
+
+  // Mobile vibration
+  if (navigator.vibrate) {
+    try { navigator.vibrate([400, 200, 400, 200, 600]); } catch (e) {}
+  }
+
+  // Ring again every 5 seconds until dismissed
+  activeAlarmInterval = setInterval(() => {
+    playChimeSound();
+    if (navigator.vibrate) {
+      try { navigator.vibrate([400, 200, 400]); } catch (e) {}
+    }
+  }, 5000);
+
+  // Auto stop ringing sound after 45 seconds
+  setTimeout(stopAlarmRinging, 45000);
+}
+
+function stopAlarmRinging() {
+  if (activeAlarmInterval) {
+    clearInterval(activeAlarmInterval);
+    activeAlarmInterval = null;
+  }
+}
+
+function triggerAlarm(note) {
+  alarmTitleText.textContent = note.title;
+  alarmTimeText.textContent = `กำหนดเวลา: ${note.dueDate} ${note.dueTime ? 'เวลา ' + note.dueTime + ' น.' : ''}`;
+  if (note.details) {
+    alarmDetailsText.textContent = note.details;
+    alarmDetailsText.style.display = 'block';
+  } else {
+    alarmDetailsText.style.display = 'none';
+  }
+
+  alarmModal.style.display = 'flex';
+  startAlarmRinging(note);
+
+  // System Push Notification
+  if ('Notification' in window && Notification.permission === 'granted') {
+    try {
+      new Notification('⏰ เตือนความจำ! อีก 10 นาที', {
+        body: `${note.title}\nกำหนดเวลา: ${note.dueTime || ''} น.`,
+        icon: 'icon.png'
+      });
+    } catch (e) {}
+  }
+}
+
+dismissAlarmBtn.addEventListener('click', () => {
+  stopAlarmRinging();
+  alarmModal.style.display = 'none';
+  showToast('👌 รับทราบการแจ้งเตือนแล้ว');
+});
+
+testAlarmSoundBtn.addEventListener('click', () => {
+  if ('Notification' in window && Notification.permission === 'default') {
+    try { Notification.requestPermission(); } catch (e) {}
+  }
+  playChimeSound();
+  if (navigator.vibrate) {
+    try { navigator.vibrate([300, 150, 300]); } catch (e) {}
+  }
+  showToast('🔊 กำลังเล่นเสียงเตือนทดสอบ');
+});
+
+function setupAlarmChecker() {
+  // Check every 10 seconds
+  setInterval(checkUpcomingAlarms, 10000);
+  // Also check immediately on load
+  checkUpcomingAlarms();
+}
+
+function checkUpcomingAlarms() {
+  if (!currentNotes || currentNotes.length === 0) return;
+  const now = new Date();
+  const nowMs = now.getTime();
+
+  currentNotes.forEach(async (note) => {
+    if (note.isDone) return;
+    if (!note.dueDate || !note.dueTime) return;
+    if (note.alarm10Min === false) return;
+    if (note.notified10Min) return;
+
+    // Parse target date and time
+    const [year, month, day] = note.dueDate.split('-').map(Number);
+    const [hours, minutes] = note.dueTime.split(':').map(Number);
+    const targetDueTime = new Date(year, month - 1, day, hours, minutes, 0, 0).getTime();
+
+    // 10 minutes before
+    const alertWindowStart = targetDueTime - (10 * 60 * 1000);
+
+    // If current time is within 10 minutes before target due time
+    if (nowMs >= alertWindowStart && nowMs < targetDueTime) {
+      triggerAlarm(note);
+      note.notified10Min = true;
+      await db.saveNote(note);
+      renderNotes();
+    }
+  });
 }
 
 // Launch application

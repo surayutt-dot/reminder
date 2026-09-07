@@ -1072,3 +1072,163 @@ body {
   from { opacity: 0; transform: translate(-50%, -20px); }
   to { opacity: 1; transform: translate(-50%, 0); }
 }
+
+/* ==========================================================================
+   Alarm 10 Min Settings & Pop-up Styles
+   ========================================================================== */
+.alarm-setting-box {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-btn);
+  padding: 10px 14px;
+}
+
+.alarm-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.alarm-label-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.alarm-checkbox {
+  width: 22px;
+  height: 22px;
+  accent-color: #4f46e5;
+  cursor: pointer;
+}
+
+.alarm-label-text {
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.btn-test-sound {
+  background: #ede9fe;
+  color: #6d28d9;
+  border: 1px solid #ddd6fe;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.btn-test-sound:active {
+  transform: scale(0.95);
+  background: #ddd6fe;
+}
+
+/* Card Alarm Chip */
+.card-alarm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4f46e5;
+  margin-left: 6px;
+}
+
+/* Alarm Triggered Modal Pop-up */
+.alarm-overlay {
+  background-color: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(6px);
+  z-index: 300; /* Above all */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.alarm-popup-card {
+  background: #ffffff;
+  border-radius: 24px;
+  max-width: 450px;
+  width: 100%;
+  text-align: center;
+  padding: 32px 24px 24px 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+  animation: alarmPopIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 3px solid #f59e0b;
+}
+
+.alarm-bell-icon {
+  font-size: 4rem;
+  margin-bottom: 12px;
+  display: inline-block;
+  animation: bellRing 0.8s ease-in-out infinite alternate;
+}
+
+.alarm-popup-heading {
+  font-size: 1.6rem;
+  color: #b45309;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.alarm-task-title {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.35;
+  margin-bottom: 8px;
+  word-break: break-word;
+}
+
+.alarm-task-time {
+  font-size: 1.15rem;
+  color: #475569;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.alarm-task-details {
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 1.05rem;
+  color: #334155;
+  text-align: left;
+  margin-bottom: 20px;
+  white-space: pre-wrap;
+}
+
+.alarm-dismiss-btn {
+  background: #f59e0b;
+  color: #ffffff;
+  font-size: 1.3rem;
+  padding: 16px 20px;
+}
+
+.alarm-dismiss-btn:active {
+  background: #d97706;
+}
+
+@keyframes bellRing {
+  0% { transform: rotate(-18deg); }
+  100% { transform: rotate(18deg); }
+}
+
+@keyframes alarmPopIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+

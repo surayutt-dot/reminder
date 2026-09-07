@@ -140,6 +140,19 @@
           </div>
         </div>
 
+        <!-- Alarm 10 min before setting -->
+        <div class="form-group alarm-setting-box">
+          <div class="alarm-setting-row">
+            <label class="alarm-label-wrap">
+              <input type="checkbox" id="noteAlarm10Min" class="alarm-checkbox" checked>
+              <span class="alarm-label-text">🔔 ส่งเสียงเตือนก่อนเวลา 10 นาที</span>
+            </label>
+            <button type="button" id="testAlarmSoundBtn" class="btn-test-sound" title="ทดสอบฟังเสียงเตือน">
+              🔊 ฟังเสียง
+            </button>
+          </div>
+        </div>
+
         <!-- Details Textarea with Voice -->
         <div class="form-group">
           <label for="noteDetails" class="form-label">รายละเอียดเพิ่มเติม:</label>
@@ -231,6 +244,20 @@
           </button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Alarm Triggered Modal (Pop-up with Sound) -->
+  <div id="alarmModal" class="modal-overlay alarm-overlay" style="display: none;">
+    <div class="modal-card alarm-popup-card">
+      <div class="alarm-bell-icon">🔔</div>
+      <h2 class="alarm-popup-heading">เตือนความจำ! อีก 10 นาที</h2>
+      <h3 id="alarmTitleText" class="alarm-task-title">...</h3>
+      <p id="alarmTimeText" class="alarm-task-time">กำหนดเวลา: ...</p>
+      <div id="alarmDetailsText" class="alarm-task-details" style="display:none;"></div>
+      <button type="button" id="dismissAlarmBtn" class="btn-primary w-full alarm-dismiss-btn">
+        👌 รับทราบ (ปิดเสียงเตือน)
+      </button>
     </div>
   </div>
 
