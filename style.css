@@ -1232,3 +1232,55 @@ body {
   100% { transform: scale(1); opacity: 1; }
 }
 
+/* Install Button in Header */
+.btn-install-header {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 9999px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  animation: pulse 2s infinite;
+}
+
+.btn-install-header:active {
+  transform: scale(0.95);
+}
+
+/* Install Guide Modal */
+.install-guide-body {
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.guide-step-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.guide-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.guide-list {
+  padding-left: 24px;
+  color: #334155;
+}
+
+.guide-list li {
+  margin-bottom: 6px;
+}
+
+

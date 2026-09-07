@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>กันลืม - โพสต์อิทเตือนความจำ</title>
-  <link rel="icon" type="image/png" href="icon.png">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <title>อย่าลืม - โพสต์อิทเตือนความจำ</title>
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#4f46e5">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -24,11 +25,17 @@
         <div class="header-title-group">
           <span class="app-logo">📌</span>
           <div>
-            <h1 class="app-title">กันลืม</h1>
+            <h1 class="app-title">อย่าลืม</h1>
             <p class="header-subtitle" id="todayText">กำลังโหลดวันที่...</p>
           </div>
         </div>
         <div class="header-actions">
+          <button id="installAppBtn" class="btn-install-header" style="display:none;" title="ติดตั้งแอปลงมือถือ">
+            📲 ติดตั้งแอป
+          </button>
+          <button id="helpInstallBtn" class="icon-btn-secondary" title="วิธีติดตั้งลงมือถือ" aria-label="วิธีติดตั้ง">
+            📱
+          </button>
           <button id="backupBtn" class="icon-btn-secondary" title="สำรอง / กู้คืนข้อมูล" aria-label="สำรองข้อมูล">
             💾
           </button>
@@ -258,6 +265,35 @@
       <button type="button" id="dismissAlarmBtn" class="btn-primary w-full alarm-dismiss-btn">
         👌 รับทราบ (ปิดเสียงเตือน)
       </button>
+    </div>
+  </div>
+
+  <!-- Mobile Install Guide Modal -->
+  <div id="installGuideModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card small-modal">
+      <div class="modal-header">
+        <h2>📱 วิธีติดตั้งลงมือถือ</h2>
+        <button id="closeInstallGuideBtn" class="close-btn">✕</button>
+      </div>
+      <div class="modal-body install-guide-body">
+        <div class="guide-step-card">
+          <h3 class="guide-title">🍎 สำหรับ iPhone (iOS):</h3>
+          <ol class="guide-list">
+            <li>เปิดเว็บนี้ด้วย <strong>Safari</strong> (ห้ามเปิดผ่านแอป Line หรือ Facebook)</li>
+            <li>แตะปุ่มแชร์ <strong>สี่เหลี่ยมลูกศรชี้ขึ้น (⬆️)</strong> ที่แถบด้านล่างจอ</li>
+            <li>เลื่อนลงมาแล้วเลือก <strong>"เพิ่มไปยังหน้าจอโฮม" (Add to Home Screen)</strong></li>
+            <li>กดปุ่ม <strong>"เพิ่ม" (Add)</strong></li>
+          </ol>
+        </div>
+        <div class="guide-step-card mt-3">
+          <h3 class="guide-title">🤖 สำหรับ Android:</h3>
+          <ol class="guide-list">
+            <li>เปิดเว็บนี้ด้วย <strong>Google Chrome</strong></li>
+            <li>แตะปุ่ม <strong>"📲 ติดตั้งแอป"</strong> ด้านบน หรือแตะจุด 3 จุดมุมบนขวา (⋮)</li>
+            <li>เลือก <strong>"ติดตั้งแอป" (Install app)</strong> หรือ <strong>"เพิ่มลงในหน้าจอหลัก"</strong></li>
+          </ol>
+        </div>
+      </div>
     </div>
   </div>
 

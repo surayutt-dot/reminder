@@ -1160,5 +1160,72 @@ function checkUpcomingAlarms() {
   });
 }
 
+// ==========================================
+// 17. PWA Installation & Service Worker
+// ==========================================
+let deferredPrompt = null;
+const installAppBtn = document.getElementById('installAppBtn');
+const helpInstallBtn = document.getElementById('helpInstallBtn');
+const installGuideModal = document.getElementById('installGuideModal');
+const closeInstallGuideBtn = document.getElementById('closeInstallGuideBtn');
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then((reg) => console.log('Service Worker registered successfully:', reg.scope))
+      .catch((err) => console.warn('Service Worker registration error:', err));
+  });
+}
+
+// Capture Android / Chrome PWA install prompt
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (installAppBtn) {
+    installAppBtn.style.display = 'inline-flex';
+  }
+});
+
+window.addEventListener('appinstalled', () => {
+  if (installAppBtn) installAppBtn.style.display = 'none';
+  deferredPrompt = null;
+  showToast('🎉 ติดตั้งแอป "อย่าลืม" ลงเครื่องสำเร็จแล้ว!');
+});
+
+if (installAppBtn) {
+  installAppBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        showToast('กำลังติดตั้งแอป...');
+      }
+      deferredPrompt = null;
+      installAppBtn.style.display = 'none';
+    } else {
+      if (installGuideModal) installGuideModal.style.display = 'flex';
+    }
+  });
+}
+
+if (helpInstallBtn) {
+  helpInstallBtn.addEventListener('click', () => {
+    if (installGuideModal) installGuideModal.style.display = 'flex';
+  });
+}
+
+if (closeInstallGuideBtn) {
+  closeInstallGuideBtn.addEventListener('click', () => {
+    if (installGuideModal) installGuideModal.style.display = 'none';
+  });
+}
+
+if (installGuideModal) {
+  installGuideModal.addEventListener('click', (e) => {
+    if (e.target === installGuideModal) installGuideModal.style.display = 'none';
+  });
+}
+
 // Launch application
 window.addEventListener('DOMContentLoaded', initApp);
